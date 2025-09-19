@@ -1,0 +1,187 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Connect</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #4f46e5;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    .container {
+      max-width: 600px;
+      margin: 1rem auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 1rem;
+    }
+    input, textarea, button {
+      width: 100%;
+      margin: 0.5rem 0;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    button {
+      background: #4f46e5;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #3730a3;
+    }
+    .post {
+      border: 1px solid #eee;
+      border-radius: 10px;
+      padding: 1rem;
+      margin: 1rem 0;
+      background: #fafafa;
+    }
+    .post-header {
+      font-weight: bold;
+      color: #333;
+    }
+    .like-btn {
+      background: #e0e7ff;
+      color: #4f46e5;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    .like-btn:hover {
+      background: #c7d2fe;
+    }
+    .tabs button {
+      width: 48%;
+      display: inline-block;
+      margin: 0.25rem 1%;
+    }
+  </style>
+</head>
+<body>
+  <header>🎓 Student Connect</header>  <div class="container">
+    <h2>Create Profile</h2>
+    <input type="text" id="name" placeholder="Enter your name">
+    <input type="text" id="school" placeholder="Enter your school">
+    <button onclick="saveProfile()">Save Profile</button>
+  </div>  <div class="container" id="mainSection" style="display:none;">
+    <div class="tabs">
+      <button onclick="showSection('posts')">Posts</button>
+      <button onclick="showSection('friends')">Friends</button>
+    </div><!-- Posts Section -->
+<div id="postsSection">
+  <h2>Create Post</h2>
+  <textarea id="postContent" placeholder="What's on your mind?"></textarea>
+  <button onclick="createPost()">Post</button>
+  <h2>Feed</h2>
+  <div id="feed"></div>
+</div>
+
+<!-- Friends Section -->
+<div id="friendsSection" style="display:none;">
+  <h2>Friend List</h2>
+  <div id="friendsList"></div>
+</div>
+
+  </div>  <script>
+    let profile = JSON.parse(localStorage.getItem('profile')) || null;
+    let posts = JSON.parse(localStorage.getItem('posts')) || [];
+    let friends = JSON.parse(localStorage.getItem('friends')) || [];
+
+    function saveProfile() {
+      const name = document.getElementById('name').value.trim();
+      const school = document.getElementById('school').value.trim();
+      if (!name || !school) {
+        alert("Please enter both name and school.");
+        return;
+      }
+      profile = { name, school };
+      localStorage.setItem('profile', JSON.stringify(profile));
+      if (!friends.includes(profile.name)) {
+        friends.push(profile.name);
+        localStorage.setItem('friends', JSON.stringify(friends));
+      }
+      document.getElementById('mainSection').style.display = 'block';
+      renderFriends();
+      renderFeed();
+      alert("Profile saved!");
+    }
+
+    function createPost() {
+      const content = document.getElementById('postContent').value.trim();
+      if (!content) return;
+      const post = {
+        id: Date.now(),
+        author: profile.name + " (" + profile.school + ")",
+        content,
+        likes: 0
+      };
+      posts.unshift(post);
+      localStorage.setItem('posts', JSON.stringify(posts));
+      document.getElementById('postContent').value = '';
+      renderFeed();
+    }
+
+    function likePost(id) {
+      posts = posts.map(p => {
+        if (p.id === id) p.likes++;
+        return p;
+      });
+      localStorage.setItem('posts', JSON.stringify(posts));
+      renderFeed();
+    }
+
+    function renderFeed() {
+      const feed = document.getElementById('feed');
+      feed.innerHTML = '';
+      posts.forEach(post => {
+        const div = document.createElement('div');
+        div.className = 'post';
+        div.innerHTML = `
+          <div class="post-header">${post.author}</div>
+          <div>${post.content}</div>
+          <button class="like-btn" onclick="likePost(${post.id})">❤ ${post.likes}</button>
+        `;
+        feed.appendChild(div);
+      });
+    }
+
+    function showSection(section) {
+      document.getElementById('postsSection').style.display = (section === 'posts') ? 'block' : 'none';
+      document.getElementById('friendsSection').style.display = (section === 'friends') ? 'block' : 'none';
+    }
+
+    function renderFriends() {
+      const list = document.getElementById('friendsList');
+      list.innerHTML = '';
+      friends.forEach(f => {
+        const div = document.createElement('div');
+        div.textContent = f;
+        list.appendChild(div);
+      });
+    }
+
+    if(profile){
+      document.getElementById('mainSection').style.display = 'block';
+      if (!friends.includes(profile.name)) friends.push(profile.name);
+      localStorage.setItem('friends', JSON.stringify(friends));
+      renderFriends();
+      renderFeed();
+    }
+  </script></body>
+</html>
