@@ -26,7 +26,7 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       padding: 1rem;
     }
-    input, textarea, button {
+    input, textarea, button, select {
       width: 100%;
       margin: 0.5rem 0;
       padding: 0.75rem;
@@ -71,6 +71,14 @@
       display: inline-block;
       margin: 0.25rem 1%;
     }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      background: #facc15;
+      color: #333;
+      border-radius: 5px;
+      margin-top: 0.5rem;
+    }
   </style>
 </head>
 <body>
@@ -86,15 +94,30 @@
     </div><!-- Posts Section -->
 <div id="postsSection">
   <h2>Create Post</h2>
+  <select id="postCategory">
+    <option value="General">General</option>
+    <option value="Study Notes">Study Notes</option>
+    <option value="Questions">Questions</option>
+    <option value="Events">Events</option>
+  </select>
   <textarea id="postContent" placeholder="What's on your mind?"></textarea>
   <button onclick="createPost()">Post</button>
+
+  <h3>Search Posts</h3>
+  <input type="text" id="postSearch" placeholder="Search posts..." oninput="renderFeed()">
+
   <h2>Feed</h2>
   <div id="feed"></div>
+
+  <h3>Daily Challenge</h3>
+  <div id="dailyChallenge">Complete 1 study task today! <span class="badge" id="challengeBadge">0</span></div>
+  <button onclick="completeChallenge()">Complete Challenge</button>
 </div>
 
 <!-- Friends Section -->
 <div id="friendsSection" style="display:none;">
   <h2>Friend List</h2>
+  <input type="text" id="friendSearch" placeholder="Search friends..." oninput="renderFriends()">
   <div id="friendsList"></div>
 </div>
 
@@ -102,86 +125,66 @@
     let profile = JSON.parse(localStorage.getItem('profile')) || null;
     let posts = JSON.parse(localStorage.getItem('posts')) || [];
     let friends = JSON.parse(localStorage.getItem('friends')) || [];
+    let dailyChallenge = parseInt(localStorage.getItem('dailyChallenge')) || 0;
 
     function saveProfile() {
       const name = document.getElementById('name').value.trim();
       const school = document.getElementById('school').value.trim();
-      if (!name || !school) {
-        alert("Please enter both name and school.");
-        return;
-      }
+      if (!name || !school) { alert("Enter both name and school."); return; }
       profile = { name, school };
       localStorage.setItem('profile', JSON.stringify(profile));
-      if (!friends.includes(profile.name)) {
-        friends.push(profile.name);
-        localStorage.setItem('friends', JSON.stringify(friends));
-      }
+      if (!friends.includes(profile.name)) { friends.push(profile.name); localStorage.setItem('friends', JSON.stringify(friends)); }
       document.getElementById('mainSection').style.display = 'block';
-      renderFriends();
-      renderFeed();
+      renderFriends(); renderFeed(); renderBadge();
       alert("Profile saved!");
     }
 
     function createPost() {
       const content = document.getElementById('postContent').value.trim();
+      const category = document.getElementById('postCategory').value;
       if (!content) return;
-      const post = {
-        id: Date.now(),
-        author: profile.name + " (" + profile.school + ")",
-        content,
-        likes: 0
-      };
+      const post = { id: Date.now(), author: profile.name + " (" + profile.school + ")", content, category, likes: 0 };
       posts.unshift(post);
       localStorage.setItem('posts', JSON.stringify(posts));
       document.getElementById('postContent').value = '';
       renderFeed();
     }
 
-    function likePost(id) {
-      posts = posts.map(p => {
-        if (p.id === id) p.likes++;
-        return p;
-      });
-      localStorage.setItem('posts', JSON.stringify(posts));
-      renderFeed();
-    }
+    function likePost(id) { posts = posts.map(p => { if (p.id===id) p.likes++; return p; }); localStorage.setItem('posts', JSON.stringify(posts)); renderFeed(); }
 
     function renderFeed() {
       const feed = document.getElementById('feed');
+      const search = document.getElementById('postSearch').value.toLowerCase();
       feed.innerHTML = '';
-      posts.forEach(post => {
+      posts.filter(p => p.content.toLowerCase().includes(search) || p.category.toLowerCase().includes(search))
+           .forEach(post => {
         const div = document.createElement('div');
         div.className = 'post';
-        div.innerHTML = `
-          <div class="post-header">${post.author}</div>
-          <div>${post.content}</div>
-          <button class="like-btn" onclick="likePost(${post.id})">❤ ${post.likes}</button>
-        `;
+        div.innerHTML = <div class="post-header">${post.author} [${post.category}]</div><div>${post.content}</div><button class="like-btn" onclick="likePost(${post.id})">❤ ${post.likes}</button>;
         feed.appendChild(div);
       });
     }
 
     function showSection(section) {
-      document.getElementById('postsSection').style.display = (section === 'posts') ? 'block' : 'none';
-      document.getElementById('friendsSection').style.display = (section === 'friends') ? 'block' : 'none';
+      document.getElementById('postsSection').style.display = (section==='posts')?'block':'none';
+      document.getElementById('friendsSection').style.display = (section==='friends')?'block':'none';
     }
 
     function renderFriends() {
       const list = document.getElementById('friendsList');
+      const search = document.getElementById('friendSearch').value.toLowerCase();
       list.innerHTML = '';
-      friends.forEach(f => {
-        const div = document.createElement('div');
-        div.textContent = f;
-        list.appendChild(div);
+      friends.filter(f => f.toLowerCase().includes(search)).forEach(f => {
+        const div = document.createElement('div'); div.textContent = f; list.appendChild(div);
       });
     }
 
-    if(profile){
-      document.getElementById('mainSection').style.display = 'block';
-      if (!friends.includes(profile.name)) friends.push(profile.name);
-      localStorage.setItem('friends', JSON.stringify(friends));
-      renderFriends();
-      renderFeed();
+    function completeChallenge() {
+      dailyChallenge++; localStorage.setItem('dailyChallenge', dailyChallenge); renderBadge();
     }
+
+    function renderBadge() { document.getElementById('challengeBadge').textContent = dailyChallenge; }
+
+    if(profile){ document.getElementById('mainSection').style.display='block'; renderFriends(); renderFeed(); renderBadge(); }
   </script></body>
 </html>
