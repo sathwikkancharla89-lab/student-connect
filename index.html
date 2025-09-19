@@ -42,8 +42,7 @@ button:hover { background: linear-gradient(90deg, #3730a3, #4f46e5); }
     <div class="tabs">
       <button onclick="showSection('posts')">Posts</button>
       <button onclick="showSection('friends')">Friends</button>
-    </div><!-- Posts Section -->
-<div id="postsSection">
+    </div><div id="postsSection">
   <h2>Create Post</h2>
   <select id="postCategory">
     <option value="General">General</option>
@@ -65,7 +64,6 @@ button:hover { background: linear-gradient(90deg, #3730a3, #4f46e5); }
   <button onclick="completeChallenge()">Complete Challenge</button>
 </div>
 
-<!-- Friends Section -->
 <div id="friendsSection" style="display:none;">
   <h2>Friend List</h2>
   <input type="text" id="friendSearch" placeholder="Search friends..." oninput="renderFriends()">
@@ -131,7 +129,40 @@ button:hover { background: linear-gradient(90deg, #3730a3, #4f46e5); }
         document.getElementById('friendsSection').style.display = (section==='friends')?'block':'none';
       }
 
+      window.renderFeed = function(){
+        const feed = document.getElementById('feed');
+        const search = document.getElementById('postSearch').value.toLowerCase();
+        feed.innerHTML='';
+        // Sort posts by likes descending (trending first)
+        const sortedPosts = posts.filter(p=>p.content.toLowerCase().includes(search)||p.category.toLowerCase().includes(search))
+                                 .sort((a,b)=>b.likes-a.likes);
+        sortedPosts.forEach(post=>{
+          const div = document.createElement('div');
+          div.className = 'post';
+          if(post.likes >= 10) div.classList.add('trending'); // Trending highlight
+          div.innerHTML=`<div class="post-header">${post.author} [${post.category}] ${post.likes>=10?'🌟 Trending':''}</div>
+                           <div>${post.content}</div>
+                           <button class="like-btn" onclick="likePost(${post.id})">❤ ${post.likes}</button>`;
+          feed.appendChild(div);
+        });
+      }
+
       function renderFriends(){
         const list = document.getElementById('friendsList');
         const search = document.getElementById('friendSearch').value.toLowerCase();
-        list.innerHTML='
+        list.innerHTML='';
+        friends.filter(f=>f.toLowerCase().includes(search)).forEach(f=>{const div=document.createElement('div'); div.textContent=f; list.appendChild(div);});
+      }
+
+      window.renderFriends = renderFriends;
+
+      window.completeChallenge = function(){
+        dailyChallenge++; localStorage.setItem('dailyChallenge', dailyChallenge); renderBadge(); updateProfileBadges();
+      }
+
+      function renderBadge(){ document.getElementById('challengeBadge').textContent=dailyChallenge; }
+      window.renderBadge = renderBadge;
+
+    });
+  </script></body>
+</html>
