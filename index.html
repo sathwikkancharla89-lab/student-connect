@@ -4,81 +4,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Connect</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f7fa;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background: #4f46e5;
-      color: white;
-      text-align: center;
-      padding: 1rem;
-      font-size: 1.5rem;
-      font-weight: bold;
-    }
-    .container {
-      max-width: 600px;
-      margin: 1rem auto;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      padding: 1rem;
-    }
-    input, textarea, button, select {
-      width: 100%;
-      margin: 0.5rem 0;
-      padding: 0.75rem;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 1rem;
-    }
-    button {
-      background: #4f46e5;
-      color: white;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    button:hover {
-      background: #3730a3;
-    }
-    .post {
-      border: 1px solid #eee;
-      border-radius: 10px;
-      padding: 1rem;
-      margin: 1rem 0;
-      background: #fafafa;
-    }
-    .post-header {
-      font-weight: bold;
-      color: #333;
-    }
-    .like-btn {
-      background: #e0e7ff;
-      color: #4f46e5;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      cursor: pointer;
-      margin-top: 0.5rem;
-    }
-    .like-btn:hover {
-      background: #c7d2fe;
-    }
-    .tabs button {
-      width: 48%;
-      display: inline-block;
-      margin: 0.25rem 1%;
-    }
-    .badge {
-      display: inline-block;
-      padding: 0.25rem 0.5rem;
-      background: #facc15;
-      color: #333;
-      border-radius: 5px;
-      margin-top: 0.5rem;
-    }
+    body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0; }
+    header { background: #4f46e5; color: white; text-align: center; padding: 1rem; font-size: 1.5rem; font-weight: bold; }
+    .container { max-width: 600px; margin: 1rem auto; background: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 1rem; }
+    input, textarea, button, select { width: 100%; margin: 0.5rem 0; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+    button { background: #4f46e5; color: white; cursor: pointer; transition: 0.3s; }
+    button:hover { background: #3730a3; }
+    .post { border: 1px solid #eee; border-radius: 10px; padding: 1rem; margin: 1rem 0; background: #fafafa; }
+    .post-header { font-weight: bold; color: #333; }
+    .like-btn { background: #e0e7ff; color: #4f46e5; border: none; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; margin-top: 0.5rem; }
+    .like-btn:hover { background: #c7d2fe; }
+    .tabs button { width: 48%; display: inline-block; margin: 0.25rem 1%; }
+    .badge { display: inline-block; padding: 0.25rem 0.5rem; background: #facc15; color: #333; border-radius: 5px; margin-top: 0.5rem; }
   </style>
 </head>
 <body>
@@ -130,10 +67,15 @@
     function saveProfile() {
       const name = document.getElementById('name').value.trim();
       const school = document.getElementById('school').value.trim();
-      if (!name || !school) { alert("Enter both name and school."); return; }
+
+      if (!name || !school) { alert("Please enter both name and school."); return; }
+
       profile = { name, school };
       localStorage.setItem('profile', JSON.stringify(profile));
+
+      if (!Array.isArray(friends)) friends = [];
       if (!friends.includes(profile.name)) { friends.push(profile.name); localStorage.setItem('friends', JSON.stringify(friends)); }
+
       document.getElementById('mainSection').style.display = 'block';
       renderFriends(); renderFeed(); renderBadge();
       alert("Profile saved!");
@@ -174,9 +116,7 @@
       const list = document.getElementById('friendsList');
       const search = document.getElementById('friendSearch').value.toLowerCase();
       list.innerHTML = '';
-      friends.filter(f => f.toLowerCase().includes(search)).forEach(f => {
-        const div = document.createElement('div'); div.textContent = f; list.appendChild(div);
-      });
+      friends.filter(f => f.toLowerCase().includes(search)).forEach(f => { const div = document.createElement('div'); div.textContent = f; list.appendChild(div); });
     }
 
     function completeChallenge() {
