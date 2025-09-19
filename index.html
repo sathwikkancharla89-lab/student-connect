@@ -4,18 +4,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Connect</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0; }
-    header { background: #4f46e5; color: white; text-align: center; padding: 1rem; font-size: 1.5rem; font-weight: bold; }
-    .container { max-width: 600px; margin: 1rem auto; background: white; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 1rem; }
-    input, textarea, button, select { width: 100%; margin: 0.5rem 0; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
-    button { background: #4f46e5; color: white; cursor: pointer; transition: 0.3s; }
-    button:hover { background: #3730a3; }
-    .post { border: 1px solid #eee; border-radius: 10px; padding: 1rem; margin: 1rem 0; background: #fafafa; }
-    .post-header { font-weight: bold; color: #333; }
-    .like-btn { background: #e0e7ff; color: #4f46e5; border: none; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; margin-top: 0.5rem; }
-    .like-btn:hover { background: #c7d2fe; }
-    .tabs button { width: 48%; display: inline-block; margin: 0.25rem 1%; }
-    .badge { display: inline-block; padding: 0.25rem 0.5rem; background: #facc15; color: #333; border-radius: 5px; margin-top: 0.5rem; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; margin: 0; padding: 0; }
+    header { background: linear-gradient(90deg, #4f46e5, #6366f1); color: white; text-align: center; padding: 1rem; font-size: 1.7rem; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }.container { max-width: 600px; margin: 1.5rem auto; background: white; border-radius: 16px; box-shadow: 0 6px 12px rgba(0,0,0,0.1); padding: 1.5rem; transition: transform 0.2s; }
+.container:hover { transform: translateY(-2px); }
+
+input, textarea, select { width: 100%; margin: 0.5rem 0; padding: 0.75rem; border: 1px solid #ddd; border-radius: 12px; font-size: 1rem; outline: none; transition: 0.3s; }
+input:focus, textarea:focus, select:focus { border-color: #4f46e5; box-shadow: 0 0 5px rgba(79,70,229,0.3); }
+
+button { width: 100%; padding: 0.75rem; margin: 0.5rem 0; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.3s; background: linear-gradient(90deg, #4f46e5, #6366f1); color: white; }
+button:hover { background: linear-gradient(90deg, #3730a3, #4f46e5); }
+
+.post { border: none; border-radius: 16px; padding: 1rem; margin: 1rem 0; background: #f9fafb; box-shadow: 0 4px 8px rgba(0,0,0,0.05); transition: 0.2s; position: relative; }
+.post:hover { transform: translateY(-2px); }
+.post-header { font-weight: bold; color: #1f2937; margin-bottom: 0.5rem; }
+.like-btn { background: #e0e7ff; color: #4f46e5; border: none; padding: 0.5rem 1rem; border-radius: 24px; cursor: pointer; margin-top: 0.5rem; transition: 0.3s; }
+.like-btn:hover { background: #c7d2fe; }
+
+.tabs button { width: 48%; display: inline-block; margin: 0.25rem 1%; }
+.badge { display: inline-block; padding: 0.3rem 0.6rem; background: #facc15; color: #1f2937; border-radius: 8px; margin-top: 0.5rem; font-weight: bold; }
+.trending { border: 2px solid gold; }
+
+@media (max-width: 650px) {
+  .container { margin: 1rem; padding: 1rem; }
+  .tabs button { width: 48%; font-size: 0.9rem; }
+}
+
   </style>
 </head>
 <body>
@@ -24,6 +37,7 @@
     <input type="text" id="name" placeholder="Enter your name">
     <input type="text" id="school" placeholder="Enter your school">
     <button onclick="saveProfile()">Save Profile</button>
+    <div id="profileBadges"></div>
   </div>  <div class="container" id="mainSection" style="display:none;">
     <div class="tabs">
       <button onclick="showSection('posts')">Posts</button>
@@ -59,72 +73,65 @@
 </div>
 
   </div>  <script>
-    let profile = JSON.parse(localStorage.getItem('profile')) || null;
-    let posts = JSON.parse(localStorage.getItem('posts')) || [];
-    let friends = JSON.parse(localStorage.getItem('friends')) || [];
-    let dailyChallenge = parseInt(localStorage.getItem('dailyChallenge')) || 0;
+    document.addEventListener('DOMContentLoaded', () => {
+      let profile = JSON.parse(localStorage.getItem('profile')) || null;
+      let posts = JSON.parse(localStorage.getItem('posts')) || [];
+      let friends = JSON.parse(localStorage.getItem('friends')) || [];
+      let dailyChallenge = parseInt(localStorage.getItem('dailyChallenge')) || 0;
 
-    function saveProfile() {
-      const name = document.getElementById('name').value.trim();
-      const school = document.getElementById('school').value.trim();
+      function updateProfileBadges(){
+        const badgeContainer = document.getElementById('profileBadges');
+        badgeContainer.innerHTML='';
+        if(dailyChallenge > 0) badgeContainer.innerHTML += '<span class="badge">🔥 Daily Streak</span> ';
+        const userPosts = posts.filter(p=>p.author.startsWith(profile.name));
+        if(userPosts.length >=5) badgeContainer.innerHTML += '<span class="badge">✍ Pro Poster</span>';
+      }
 
-      if (!name || !school) { alert("Please enter both name and school."); return; }
+      if(profile){
+        document.getElementById('mainSection').style.display='block';
+        if(!friends.includes(profile.name)){ friends.push(profile.name); localStorage.setItem('friends', JSON.stringify(friends)); }
+        renderFriends(); renderFeed(); renderBadge(); updateProfileBadges();
+      }
 
-      profile = { name, school };
-      localStorage.setItem('profile', JSON.stringify(profile));
+      window.saveProfile = function(){
+        const name = document.getElementById('name').value.trim();
+        const school = document.getElementById('school').value.trim();
+        if(!name || !school){ alert("Please enter both name and school."); return; }
 
-      if (!Array.isArray(friends)) friends = [];
-      if (!friends.includes(profile.name)) { friends.push(profile.name); localStorage.setItem('friends', JSON.stringify(friends)); }
+        profile = {name, school};
+        localStorage.setItem('profile', JSON.stringify(profile));
 
-      document.getElementById('mainSection').style.display = 'block';
-      renderFriends(); renderFeed(); renderBadge();
-      alert("Profile saved!");
-    }
+        if(!Array.isArray(friends)) friends = [];
+        if(!friends.includes(profile.name)){ friends.push(profile.name); localStorage.setItem('friends', JSON.stringify(friends)); }
 
-    function createPost() {
-      const content = document.getElementById('postContent').value.trim();
-      const category = document.getElementById('postCategory').value;
-      if (!content) return;
-      const post = { id: Date.now(), author: profile.name + " (" + profile.school + ")", content, category, likes: 0 };
-      posts.unshift(post);
-      localStorage.setItem('posts', JSON.stringify(posts));
-      document.getElementById('postContent').value = '';
-      renderFeed();
-    }
+        document.getElementById('mainSection').style.display='block';
+        renderFriends(); renderFeed(); renderBadge(); updateProfileBadges();
+        alert("Profile saved!");
+      }
 
-    function likePost(id) { posts = posts.map(p => { if (p.id===id) p.likes++; return p; }); localStorage.setItem('posts', JSON.stringify(posts)); renderFeed(); }
+      window.createPost = function(){
+        const content = document.getElementById('postContent').value.trim();
+        const category = document.getElementById('postCategory').value;
+        if(!content) return;
+        const post = {id: Date.now(), author: profile.name+" ("+profile.school+")", content, category, likes:0};
+        posts.unshift(post);
+        localStorage.setItem('posts', JSON.stringify(posts));
+        document.getElementById('postContent').value='';
+        renderFeed(); updateProfileBadges();
+      }
 
-    function renderFeed() {
-      const feed = document.getElementById('feed');
-      const search = document.getElementById('postSearch').value.toLowerCase();
-      feed.innerHTML = '';
-      posts.filter(p => p.content.toLowerCase().includes(search) || p.category.toLowerCase().includes(search))
-           .forEach(post => {
-        const div = document.createElement('div');
-        div.className = 'post';
-        div.innerHTML = <div class="post-header">${post.author} [${post.category}]</div><div>${post.content}</div><button class="like-btn" onclick="likePost(${post.id})">❤ ${post.likes}</button>;
-        feed.appendChild(div);
-      });
-    }
+      window.likePost = function(id){
+        posts = posts.map(p=>{ if(p.id===id)p.likes++; return p; });
+        localStorage.setItem('posts', JSON.stringify(posts));
+        renderFeed(); updateProfileBadges();
+      }
 
-    function showSection(section) {
-      document.getElementById('postsSection').style.display = (section==='posts')?'block':'none';
-      document.getElementById('friendsSection').style.display = (section==='friends')?'block':'none';
-    }
+      window.showSection = function(section){
+        document.getElementById('postsSection').style.display = (section==='posts')?'block':'none';
+        document.getElementById('friendsSection').style.display = (section==='friends')?'block':'none';
+      }
 
-    function renderFriends() {
-      const list = document.getElementById('friendsList');
-      const search = document.getElementById('friendSearch').value.toLowerCase();
-      list.innerHTML = '';
-      friends.filter(f => f.toLowerCase().includes(search)).forEach(f => { const div = document.createElement('div'); div.textContent = f; list.appendChild(div); });
-    }
-
-    function completeChallenge() {
-      dailyChallenge++; localStorage.setItem('dailyChallenge', dailyChallenge); renderBadge();
-    }
-
-    function renderBadge() { document.getElementById('challengeBadge').textContent = dailyChallenge; }
-
-    if(profile){ document.getElementById('mainSection').style.display='block'; renderFriends(); renderFeed(); renderBadge(); }
-  </script></body>
-</html>
+      function renderFriends(){
+        const list = document.getElementById('friendsList');
+        const search = document.getElementById('friendSearch').value.toLowerCase();
+        list.innerHTML='
